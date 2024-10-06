@@ -1,7 +1,11 @@
 {
   "name": "wa_bot",
   "module": "main.ts",
+  "license": "MIT",
   "type": "module",
+  "scripts": {
+    "audit": "bun i && yarn audit"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },

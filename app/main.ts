@@ -63,14 +63,6 @@ async function connectToWhatsApp(): Promise<void> {
   sock.ev.on("messages.upsert", async (m) => {
     const msg = m.messages[0];
     if (!msg.message || !msg.message.conversation) return;
-
-    console.log(
-      "Received message:",
-      msg.message.conversation,
-      "from",
-      msg.pushName
-    );
-
     // Process the message
     processReservations(msg, sock);
   });

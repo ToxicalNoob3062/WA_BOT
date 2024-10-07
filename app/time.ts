@@ -1,5 +1,5 @@
 import moment from "moment-timezone";
-import { redis_client } from "./bots/reservation-bot/bot";
+import { redis_client } from "./bots/reservation-bot/bot.js";
 
 // Convert timestamp to Ottawa time zone to only hours and minutes
 export function convertTime(zone: string, timeStamp: string) {
@@ -8,7 +8,7 @@ export function convertTime(zone: string, timeStamp: string) {
 
 export function convertTo12HourFormat(time: string): string {
   const [hours, minutes] = time.split(":").map(Number);
-  const period = hours >= 12 ? "PM" : "AM";
+  const period = hours >= 12 ? "pm" : "am";
   const adjustedHours = hours % 12 || 12; // Convert 0 to 12 for midnight
   return `${adjustedHours}:${minutes.toString().padStart(2, "0")} ${period}`;
 }
@@ -31,7 +31,13 @@ export async function isInRange(jid: string, timeStamp: string) {
   const endTime = await redis_client.get(jid + "_e");
   if (!startTime || !endTime) return false;
   return (
-    comapare(startTime, convertedTime) >= 0 &&
-    comapare(endTime, convertedTime) <= 0
+    comapare(startTime, convertedTime) <= 0 &&
+    comapare(endTime, convertedTime) >= 0
   );
+}
+
+//check international time bound
+export function isInternationalTime(time: string) {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
 }

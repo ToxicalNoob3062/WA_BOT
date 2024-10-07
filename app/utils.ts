@@ -2,6 +2,7 @@ import Redis from "ioredis";
 import { backupStorage } from "./main.js";
 import { convertTo12HourFormat } from "./time.js";
 import { proto, WASocket } from "@whiskeysockets/baileys";
+import { redis_client } from "./bots/reservation-bot/bot.js";
 
 export async function sendMsg(
   jid: string,
@@ -57,13 +58,21 @@ export async function addGroup(
   if (await client.sismember(bot_name, jid)) {
     sendMsg(
       jid,
-      "This group is already authorized to use the bot.\n~zuhu",
+      "This group is already authorized to use the bot.  ~Zuhu",
       sock
     );
   } else {
     //add the jid to the set
     client.sadd(bot_name, jid);
-    sendMsg(jid, "This group is now authorized to use the bot.\n~zuhu", sock);
+    if (!(await redis_client.get(jid + "_s"))) {
+      await sleep(500);
+      setReservationTime(jid, "8:00", "start", sock, redis_client);
+    }
+    if (!(await redis_client.get(jid + "_e"))) {
+      await sleep(500);
+      setReservationTime(jid, "23:00", "end", sock, redis_client);
+    }
+    sendMsg(jid, "This group is now authorized to use the bot.  ~Zuhu", sock);
   }
 }
 
@@ -85,15 +94,13 @@ export async function removeGroup(
     client.srem(bot_name, jid);
     sendMsg(
       jid,
-      "This group will be no longer authorized to use the bot.\n~zuhu",
+      "This group will be no longer authorized to use the bot.  ~Zuhu",
       sock
     );
-  } else {
-    sendMsg(jid, "This group was not authorized to use the bot.\n~zuhu", sock);
   }
 }
 
-export function setReservationTime(
+export async function setReservationTime(
   jid: string,
   time: string | undefined,
   type: "start" | "end",
@@ -101,13 +108,14 @@ export function setReservationTime(
   redis_client: Redis
 ) {
   if (time) {
-    redis_client.set(jid + (type === "start" ? "_s" : "_e"), time);
+    await redis_client.set(jid + (type === "start" ? "_s" : "_e"), time);
     sendMsg(
       jid,
-      `Reservation ${type} time has been set to ${convertTo12HourFormat(
-        time
-      )}\n~zuhu`,
+      `${type} time has been set to ${convertTo12HourFormat(time)}  ~Zuhu`,
       sock
     );
   }
 }
+
+//async sleep function
+export const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));

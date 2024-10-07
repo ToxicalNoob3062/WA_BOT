@@ -18,14 +18,14 @@ export default async function cancel(
   if (done)
     sendMsg(
       jid,
-      `@${number} has released a spot for others.\n~zuhu`,
+      `@${number} has released a spot for others.  ~Zuhu`,
       sock,
       mentions
     );
   else
     sendMsg(
       jid,
-      `@${number}, you have not made a reservation yet.\n~zuhu`,
+      `@${number}, you have not made a reservation yet.  ~Zuhu`,
       sock,
       mentions
     );

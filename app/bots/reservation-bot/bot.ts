@@ -5,10 +5,15 @@ import list from "./list.js";
 import reserve from "./reserve.js";
 import stats from "./stats.js";
 import { Constants } from "./constant.js";
-import { convertTime, convertTo12HourFormat, isInRange } from "../../time.js";
 import { getRedisClient } from "../../redis-interface/client.js";
 import { proto, WASocket } from "@whiskeysockets/baileys";
 import { RedisQueue } from "../../redis-interface/queue.js";
+import {
+  convertTime,
+  convertTo12HourFormat,
+  isInRange,
+  isInternationalTime,
+} from "../../time.js";
 import {
   addGroup,
   authorize,
@@ -44,19 +49,25 @@ export async function processReservations(
   const command: commands = retrieveCommand(msg) as commands;
   const jid = msg.key.remoteJid as string;
   const timeStamp = msg.messageTimestamp.toString();
+  const authorized = await authorize(jid, Constants.bot_name, redis_client);
 
   //veirfy if they are authorized to use the bot
-  if (!(await authorize(jid, Constants.bot_name, redis_client))) return;
+  if (command !== "/authorize" && !authorized) return;
 
   //check if the group can reserve the seat between this time right now.
-  if (!(await isInRange(jid, timeStamp))) {
+  if (
+    command !== "/start" &&
+    command !== "/end" &&
+    authorized &&
+    !(await isInRange(jid, timeStamp))
+  ) {
     sendMsg(
       jid,
       `You can only use this robot from ${convertTo12HourFormat(
         (await redis_client.get(jid + "_s")) as string
       )} to ${convertTo12HourFormat(
         (await redis_client.get(jid + "_e")) as string
-      )}.\n~zuhu`,
+      )}.  ~Zuhu`,
       sock,
       undefined,
       msg
@@ -103,11 +114,8 @@ export async function processReservations(
 
     //admin commands
     case "/authorize":
-      if (isAdmin(msg, sock)) {
-        setReservationTime(jid, "8:00", "start", sock, redis_client);
-        setReservationTime(jid, "23:00", "end", sock, redis_client);
+      if (isAdmin(msg, sock))
         addGroup(jid, Constants.bot_name, sock, redis_client);
-      }
       break;
     case "/unauthorize":
       if (isAdmin(msg, sock))
@@ -116,20 +124,28 @@ export async function processReservations(
     case "/start":
       if (isAdmin(msg, sock)) {
         const start_time = msg?.message?.conversation?.split("@")[1]; //HH:MM
-        setReservationTime(jid, start_time, "start", sock, redis_client);
+        if (start_time && isInternationalTime(start_time))
+          setReservationTime(jid, start_time, "start", sock, redis_client);
+        else {
+          sendMsg(jid, "Please enter time in HH:MM format.  ~Zuhu", sock);
+        }
       }
       break;
     case "/end":
       if (isAdmin(msg, sock)) {
         const end_time = msg?.message?.conversation?.split("@")[1]; //HH:MM
-        setReservationTime(jid, end_time, "end", sock, redis_client);
+        if (end_time && isInternationalTime(end_time))
+          setReservationTime(jid, end_time, "end", sock, redis_client);
+        else {
+          sendMsg(jid, "Please enter time in HH:MM format.  ~Zuhu", sock);
+        }
       }
       break;
     case "/clear":
       if (isAdmin(msg, sock)) {
         const cleared = await queue.clear();
         if (cleared) {
-          sendMsg(jid, "Queue has been cleared manually!\n~zuhu", sock);
+          sendMsg(jid, "Queue has been cleared manually!  ~Zuhu", sock);
         }
       }
       break;

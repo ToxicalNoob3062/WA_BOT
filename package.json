@@ -1,19 +1,22 @@
 {
   "name": "wa_bot",
-  "module": "main.ts",
+  "main": "main.js",
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "audit": "bun i && yarn audit"
+    "start": "pnpm build && node dist/main.js",
+    "build": "tsc"
   },
   "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
+    "@types/node": "latest",
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@hapi/boom": "^10.0.1",
     "@whiskeysockets/baileys": "^6.7.8",
+    "ioredis": "^5.4.1",
+    "moment": "^2.30.1",
+    "moment-timezone": "^0.5.46",
     "pino": "^9.4.0",
     "qrcode-terminal": "^0.12.0"
   }

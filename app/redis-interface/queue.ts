@@ -1,3 +1,4 @@
+import moment from "moment-timezone";
 import { Redis } from "ioredis";
 
 export class RedisQueue {
@@ -7,6 +8,14 @@ export class RedisQueue {
   constructor(queueName: string, client: Redis) {
     this.redis = client;
     this.queueName = queueName;
+
+    // Set the queue to expire at 11:00 PM every day in Ottawa time
+    const now = moment().tz("America/Toronto");
+    const elevenPM = moment()
+      .tz("America/Toronto")
+      .set({ hour: 23, minute: 0, second: 0, millisecond: 0 });
+    const diff = elevenPM.diff(now, "seconds");
+    this.redis.expire(this.queueName, diff);
   }
 
   // Add an element to the end of the list
@@ -66,6 +75,16 @@ export class RedisQueue {
       return length;
     } catch (error) {
       throw new Error("Error getting the size of the queue: " + error);
+    }
+  }
+
+  //clear the queue
+  async clear(): Promise<boolean> {
+    try {
+      await this.redis.del(this.queueName);
+      return true;
+    } catch (error) {
+      throw new Error("Error clearing the queue: " + error);
     }
   }
 }

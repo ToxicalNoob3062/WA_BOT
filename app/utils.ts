@@ -1,5 +1,6 @@
 import Redis from "ioredis";
 import { backupStorage } from "./main.js";
+import { convertTo12HourFormat } from "./time.js";
 import { proto, WASocket } from "@whiskeysockets/baileys";
 
 export async function sendMsg(
@@ -24,6 +25,10 @@ export async function sendMsg(
   } catch (e) {
     console.error("Error sending message:", e);
   }
+}
+
+export function retrieveCommand(msg: proto.IWebMessageInfo) {
+  return msg?.message?.conversation?.trim().split(" ")[0];
 }
 
 //authorize function
@@ -81,5 +86,22 @@ export async function removeGroup(
     );
   } else {
     sendMsg(jid, "This group was not authorized to use the bot.", sock);
+  }
+}
+
+export function setReservationTime(
+  jid: string,
+  time: string | undefined,
+  type: "start" | "end",
+  sock: WASocket,
+  redis_client: Redis
+) {
+  if (time) {
+    redis_client.set(jid + (type === "start" ? "_s" : "_e"), time);
+    sendMsg(
+      jid,
+      `Reservation ${type} time has been set to ${convertTo12HourFormat(time)}`,
+      sock
+    );
   }
 }

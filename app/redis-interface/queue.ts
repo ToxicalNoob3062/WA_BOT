@@ -1,12 +1,11 @@
-import { getRedisClient } from "./client.js";
 import { Redis } from "ioredis";
 
 export class RedisQueue {
   private redis: Redis;
   private queueName: string;
 
-  constructor(queueName: string) {
-    this.redis = getRedisClient();
+  constructor(queueName: string, client: Redis) {
+    this.redis = client;
     this.queueName = queueName;
   }
 

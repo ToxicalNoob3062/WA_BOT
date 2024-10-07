@@ -4,12 +4,21 @@ import end from "./end.js";
 import help from "./help.js";
 import list from "./list.js";
 import moment from "moment-timezone";
+import Redis from "ioredis";
 import reserve from "./reserve.js";
 import start from "./start.js";
 import stats from "./stats.js";
-import { authorize } from "../../utils.js";
+import { Constants } from "./constant.js";
+import { getRedisClient } from "../../redis-interface/client.js";
 import { proto, WASocket } from "@whiskeysockets/baileys";
 import { RedisQueue } from "../../redis-interface/queue.js";
+import {
+  addGroup,
+  authorize,
+  isAdmin,
+  removeGroup,
+  sendMsg,
+} from "../../utils.js";
 
 dotenv.config();
 
@@ -20,11 +29,15 @@ type commands =
   | "/list"
   | "/stats"
   | "/start"
-  | "/end";
+  | "/end"
+  | "/clear"
+  | "/authorize"
+  | "/unauthorize";
 
-export const queue = new RedisQueue("badminton");
+const redis_client = getRedisClient();
+export const queue = new RedisQueue("badminton", redis_client);
 
-export function processReservations(
+export async function processReservations(
   msg: proto.IWebMessageInfo,
   sock: WASocket
 ) {
@@ -33,7 +46,10 @@ export function processReservations(
     " "
   )[0] as commands;
   const jid = msg.key.remoteJid as string;
+  //veirfy if they are authorized to use the bot
+  if (!(await authorize(jid, Constants.bot_name, redis_client))) return;
   switch (command) {
+    //user commands
     case "/help":
       help(jid, sock);
       break;
@@ -66,6 +82,16 @@ export function processReservations(
       break;
     case "/stats":
       stats(jid, sock);
+      break;
+
+    //admin commands
+    case "/authorize":
+      if (isAdmin(msg, sock))
+        addGroup(jid, Constants.bot_name, sock, redis_client);
+      break;
+    case "/unauthorize":
+      if (isAdmin(msg, sock))
+        removeGroup(jid, Constants.bot_name, sock, redis_client);
       break;
     // case "/start":
     //   if (authorize(msg, sock)) start(sock);

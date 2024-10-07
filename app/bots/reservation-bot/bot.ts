@@ -56,7 +56,7 @@ export async function processReservations(
         (await redis_client.get(jid + "_s")) as string
       )} to ${convertTo12HourFormat(
         (await redis_client.get(jid + "_e")) as string
-      )}`,
+      )}.\n~zuhu`,
       sock,
       undefined,
       msg
@@ -129,7 +129,7 @@ export async function processReservations(
       if (isAdmin(msg, sock)) {
         const cleared = await queue.clear();
         if (cleared) {
-          sendMsg(jid, "Queue has been cleared manually!", sock);
+          sendMsg(jid, "Queue has been cleared manually!\n~zuhu", sock);
         }
       }
       break;

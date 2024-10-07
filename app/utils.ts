@@ -55,11 +55,15 @@ export async function addGroup(
 ) {
   //see if the jid is already in the set
   if (await client.sismember(bot_name, jid)) {
-    sendMsg(jid, "This group is already authorized to use the bot.", sock);
+    sendMsg(
+      jid,
+      "This group is already authorized to use the bot.\n~zuhu",
+      sock
+    );
   } else {
     //add the jid to the set
     client.sadd(bot_name, jid);
-    sendMsg(jid, "This group is now authorized to use the bot.", sock);
+    sendMsg(jid, "This group is now authorized to use the bot.\n~zuhu", sock);
   }
 }
 
@@ -81,11 +85,11 @@ export async function removeGroup(
     client.srem(bot_name, jid);
     sendMsg(
       jid,
-      "This group will be no longer authorized to use the bot.",
+      "This group will be no longer authorized to use the bot.\n~zuhu",
       sock
     );
   } else {
-    sendMsg(jid, "This group was not authorized to use the bot.", sock);
+    sendMsg(jid, "This group was not authorized to use the bot.\n~zuhu", sock);
   }
 }
 
@@ -100,7 +104,9 @@ export function setReservationTime(
     redis_client.set(jid + (type === "start" ? "_s" : "_e"), time);
     sendMsg(
       jid,
-      `Reservation ${type} time has been set to ${convertTo12HourFormat(time)}`,
+      `Reservation ${type} time has been set to ${convertTo12HourFormat(
+        time
+      )}\n~zuhu`,
       sock
     );
   }

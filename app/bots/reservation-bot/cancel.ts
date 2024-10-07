@@ -16,11 +16,16 @@ export default async function cancel(
   const number = mentionsStr?.split("@")[0];
   //send a confirmation message
   if (done)
-    sendMsg(jid, `@${number} has released a spot for others.`, sock, mentions);
+    sendMsg(
+      jid,
+      `@${number} has released a spot for others.\n~zuhu`,
+      sock,
+      mentions
+    );
   else
     sendMsg(
       jid,
-      `@${number}, you have not made a reservation yet.`,
+      `@${number}, you have not made a reservation yet.\n~zuhu`,
       sock,
       mentions
     );

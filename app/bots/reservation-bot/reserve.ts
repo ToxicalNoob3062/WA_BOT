@@ -18,14 +18,14 @@ export default async function reserve(
   if (done)
     sendMsg(
       jid,
-      `Congrats @${number}!🎉 You have successfully reserved a spot.`,
+      `Congrats @${number}!🎉 You have successfully reserved a spot.\n~zuhu`,
       sock,
       mentions
     );
   else
     sendMsg(
       jid,
-      `@${number}, you have already made a reservation.`,
+      `@${number}, you have already made a reservation.\n~zuhu`,
       sock,
       mentions
     );

@@ -9,6 +9,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["app/*.ts"], // Include all TypeScript files in the root directory
+  "include": ["app/**/*.ts"], // Include all TypeScript files in the 'app' directory and its subdirectories
   "exclude": ["node_modules"]
 }

@@ -1,6 +1,7 @@
 import * as fs from "fs";
+import dotenv from "dotenv";
 import { Boom } from "@hapi/boom";
-import { sendMsg } from "./utils";
+import { processReservations } from "./bots/reservation-bot/bot.js";
 import {
   makeWASocket,
   DisconnectReason,
@@ -10,8 +11,11 @@ import {
   proto,
 } from "@whiskeysockets/baileys";
 
+//load the .env file
+dotenv.config();
+
 let isShuttingDown = false;
-let backupStorage = new Map<string, proto.WebMessageInfo>();
+export let backupStorage = new Map<string, proto.WebMessageInfo>();
 
 async function connectToWhatsApp(): Promise<void> {
   const {
@@ -55,9 +59,10 @@ async function connectToWhatsApp(): Promise<void> {
     }
   });
 
+  // args:[remoteJid, participant, timestamp, pushname, extra...]
   sock.ev.on("messages.upsert", async (m) => {
     const msg = m.messages[0];
-    if (!msg.message) return;
+    if (!msg.message || !msg.message.conversation) return;
 
     console.log(
       "Received message:",
@@ -66,7 +71,8 @@ async function connectToWhatsApp(): Promise<void> {
       msg.pushName
     );
 
-    console.log("____raw____", msg);
+    // Process the message
+    processReservations(msg, sock);
   });
 
   // Handle graceful shutdown
